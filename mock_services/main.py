@@ -58,3 +58,6 @@ def get_offers(customer_id: str):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+@app.get("/")
+def root():
+    return {"message": "Mock Services API is running", "status": "ok"}

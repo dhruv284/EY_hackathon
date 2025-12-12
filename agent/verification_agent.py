@@ -82,3 +82,6 @@ async def verify(req: VerifyRequest):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+@app.get("/")
+def root():
+    return {"message": "Mock Services API is running", "status": "ok"}
