@@ -23,6 +23,6 @@ def underwrite(req: UnderwriteRequest):
         "reason": "Credit risk too high"
     }
 
-@app.get("/")
+@app.get("/uagent")
 def root():
     return {"status": "Underwriting Agent running"}
