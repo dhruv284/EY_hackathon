@@ -14,8 +14,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-AADHAAR_VERIFIED = set()
-
 
 # Load endpoints from environment variables
 CRM_URL = os.getenv("CRM_URL")
@@ -63,14 +61,11 @@ async def verify(req: VerifyRequest):
 
     # ⚠ RULE 2: CREDIT SCORE 550–699 → ASK FOR AADHAAR
     if 550 <= credit_score < 700:
-        if req.customer_id not in AADHAAR_VERIFIED:
-            return {
-                "decision": "MORE_DETAILS_REQUIRED",
-                "credit_score": credit_score,
-                "required_fields": ["aadhaar", "address"]
-            }
-    # ✅ Aadhaar already verified → allow approval
-
+        return {
+            "decision": "MORE_DETAILS_REQUIRED",
+            "credit_score": credit_score,
+            "required_fields": ["aadhaar", "address"]
+        }
 
     # ✅ RULE 3: CREDIT SCORE ≥ 700 → APPROVED
     offers = None
@@ -110,9 +105,6 @@ async def verify_aadhaar(
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(aadhaar_file.file, buffer)
-
-    # ✅ MARK CUSTOMER AS AADHAAR VERIFIED
-    AADHAAR_VERIFIED.add(customer_id)
 
     return {
         "status": "VERIFIED",

@@ -28,27 +28,19 @@ export default function Dashboard() {
   };
 
 
-  const handleAadhaarVerified = async (customerIdFromAadhaar) => {
+    const handleAadhaarVerified = async () => {
     if (!loanData) return;
 
-    const updatedLoanData = {
-      ...loanData,
-      customer_id: customerIdFromAadhaar
-    };
-
-    setLoanData(updatedLoanData);
-
-    const res = await applyLoan(updatedLoanData);
+    const res = await applyLoan(loanData);
     if (!res) return;
 
-    setResponse(res);
+    setResponse(res); // ✅ IMPORTANT
 
     if (res.status === "APPROVED") {
       setPdfBlob(res.pdfBlob);
       setStage("SANCTION");
     }
   };
-
 
 
   return (
