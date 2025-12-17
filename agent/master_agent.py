@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
+import os
 app = FastAPI(title="Master Agent")
 
 VERIFICATION_URL = os.getenv("VERIFICATION_URL")
