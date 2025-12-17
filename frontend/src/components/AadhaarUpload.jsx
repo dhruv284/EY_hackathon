@@ -9,7 +9,7 @@ export default function AadhaarUpload({ onVerified }) {
 
     if (res.status === "VERIFIED") {
       alert("Aadhaar Verified");
-      onVerified(); // re-triggers apply-loan
+      onVerified(e.target.customer_id.value);; // re-triggers apply-loan
     } else {
       alert("Aadhaar verification failed");
     }
