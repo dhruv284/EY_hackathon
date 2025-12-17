@@ -10,13 +10,22 @@ MOCK_CRM = {
         "address": "Rourkela",
         "pan": "ABCDE1234F",
         "kyc_status": "VERIFIED"
+    },
+    "C009": {
+        "full_name": "Test User",
+        "phone": "9000000001",
+        "address": "Bangalore",
+        "pan": "PAN_MID_001",
+        "kyc_status": "PENDING"
     }
 }
+
 
 MOCK_CREDIT = {
     "ABCDE1234F": {"credit_score": 760},
     "XYZ9876543": {"credit_score": 650},
-    "PAN1234567": {"credit_score": 720}
+    "PAN1234567": {"credit_score": 720},
+    "PAN_MID_001": {"credit_score":600}
 }
 
 MOCK_OFFERS = {
@@ -58,6 +67,3 @@ def get_offers(customer_id: str):
 @app.get("/health")
 def health():
     return {"status": "ok"}
-@app.get("/")
-def root():
-    return {"message": "Mock Services API is running", "status": "ok"}
