@@ -6,23 +6,27 @@ import Timeline from "../components/Timeline";
 import { applyLoan } from "../api/loanApi";
 
 export default function Dashboard() {
+  const [pdfBlob, setPdfBlob] = useState(null);
   const [stage, setStage] = useState("FORM");
   const [loanData, setLoanData] = useState(null);
   const [response, setResponse] = useState(null);
 
   const handleLoanResult = (res, data) => {
-    if (!res || !res.status) return; 
-    const status = res.status.toUpperCase(); 
+    if (!res || !res.status) return;
 
     setLoanData(data);
     setResponse(res);
 
-    if (status === "PENDING") {
+    if (res.status === "PENDING") {
       setStage("AADHAAR");
-    } else if (status === "APPROVED") {
+    }
+
+    if (res.status === "APPROVED") {
+      setPdfBlob(res.pdfBlob);   // ✅ store PDF
       setStage("SANCTION");
     }
   };
+
 
   const handleAadhaarVerified = async () => {
     if (!loanData) return;
@@ -35,6 +39,7 @@ export default function Dashboard() {
     setResponse(res);
 
     if (status === "APPROVED") {
+      setPdfBlob(res.pdfBlob);
       setStage("SANCTION");
     }
   };
@@ -66,9 +71,10 @@ export default function Dashboard() {
             <AadhaarUpload onVerified={handleAadhaarVerified} />
           )}
 
-          {stage === "SANCTION" && response && (
-            <SanctionView data={response} />
+          {stage === "SANCTION" && (
+            <SanctionView pdfBlob={pdfBlob} />
           )}
+
         </div>
 
         {/* Footer */}
