@@ -1,13 +1,20 @@
-import httpx
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import os
+impo
 app = FastAPI(title="Master Agent")
 
 VERIFICATION_URL = os.getenv("VERIFICATION_URL")
 SALES_URL = os.getenv("SALES_URL")
 UNDERWRITING_URL = os.getenv("UNDERWRITING_URL")
 SANCTION_URL = os.getenv("SANCTION_URL")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class LoanRequest(BaseModel):
     customer_id: str
@@ -16,41 +23,75 @@ class LoanRequest(BaseModel):
     phone: str
     requested_amount: int
 
+
 @app.post("/apply-loan")
 async def apply_loan(req: LoanRequest):
     async with httpx.AsyncClient() as client:
-        verification = await client.post(
+
+        # 1️⃣ VERIFICATION
+        verification_resp = await client.post(
             f"{VERIFICATION_URL}/verify",
-            json=req.dict()
+            json={
+                "customer_id": req.customer_id,
+                "pan": req.pan,
+                "full_name": req.full_name,
+                "phone": req.phone
+            }
         )
-        v = verification.json()
+        verification = verification_resp.json()
 
-        if not v["verification_passed"]:
-            return {"status": "REJECTED", "reason": "Verification failed"}
+        # ❌ REJECT
+        if verification["decision"] == "REJECTED":
+            return {
+                "status": "REJECTED",
+                "reason": verification["reason"],
+                "credit_score": verification["credit_score"]
+            }
 
-        sales = await client.post(
+        # ⚠️ NEED AADHAAR
+        if verification["decision"] == "MORE_DETAILS_REQUIRED":
+            return {
+                "status": "PENDING",
+                "required_fields": verification["required_fields"],
+                "next_step": {
+                    "endpoint": "http://localhost:9004/verify/aadhaar",
+                    "method": "POST",
+                    "description": "Upload Aadhaar to continue"
+                }
+            }
+
+        # ✅ APPROVED
+        credit_score = verification["credit_score"]
+
+        # 2️⃣ SALES
+        sales_resp = await client.post(
             f"{SALES_URL}/sales/recommend",
             json={
                 "customer_id": req.customer_id,
-                "credit_score": v["credit_score"]
+                "credit_score": credit_score
             }
         )
-        offer = sales.json()
+        offer = sales_resp.json()
 
-        underwriting = await client.post(
+        # 3️⃣ UNDERWRITING
+        underwriting_resp = await client.post(
             f"{UNDERWRITING_URL}/underwrite",
             json={
                 "customer_id": req.customer_id,
-                "credit_score": v["credit_score"],
+                "credit_score": credit_score,
                 "loan_amount": req.requested_amount
             }
         )
-        uw = underwriting.json()
+        uw = underwriting_resp.json()
 
         if not uw["approved"]:
-            return {"status": "REJECTED", "reason": uw["reason"]}
+            return {
+                "status": "REJECTED",
+                "reason": uw["reason"]
+            }
 
-        sanction = await client.post(
+        # 4️⃣ SANCTION
+        sanction_resp = await client.post(
             f"{SANCTION_URL}/sanction",
             json={
                 "customer_id": req.customer_id,
@@ -61,9 +102,15 @@ async def apply_loan(req: LoanRequest):
 
         return {
             "status": "APPROVED",
-            "sanction": sanction.json()
+            "sanction": sanction_resp.json()
         }
+
 
 @app.get("/")
 def root():
     return {"status": "Master Agent running"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
