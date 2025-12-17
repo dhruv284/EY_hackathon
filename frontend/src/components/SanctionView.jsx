@@ -20,7 +20,7 @@ export default function SanctionView({ data }) {
 
       {/* Download Link */}
       <a
-        href={`http://localhost:9007${data.sanction.sanction_letter}`}
+        href={`https://sanction-agent.onrender.com/${data.sanction.sanction_letter}`}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-block w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] transition"

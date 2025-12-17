@@ -6,13 +6,35 @@ export async function applyLoan(data) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  return res.json();
+
+  const contentType = res.headers.get("content-type");
+
+  // ✅ APPROVED → PDF
+  if (contentType && contentType.includes("application/pdf")) {
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sanction_letter.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    return { status: "APPROVED" };
+  }
+
+  // ❌ REJECTED / ⚠️ PENDING → JSON
+  return await res.json();
 }
 
 export async function uploadAadhaar(formData) {
-  const res = await fetch("https://ey-hackathon-adgl.onrender.com/verify/aadhaar", {
-    method: "POST",
-    body: formData,
-  });
+  const res = await fetch(
+    "https://ey-hackathon-adgl.onrender.com/verify/aadhaar",
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
   return res.json();
 }
