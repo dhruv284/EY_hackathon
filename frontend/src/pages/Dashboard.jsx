@@ -12,45 +12,36 @@ export default function Dashboard() {
   const [response, setResponse] = useState(null);
 
   const handleLoanResult = (res, data) => {
-    if (!res) return;
+    if (!res || !res.status) return;
 
     setLoanData(data);
     setResponse(res);
 
     if (res.status === "PENDING") {
       setStage("AADHAAR");
-      return;
     }
 
     if (res.status === "APPROVED") {
-      setPdfBlob(res.pdfBlob); // PDF exists only here
+      setPdfBlob(res.pdfBlob);   // ✅ store PDF
       setStage("SANCTION");
-      return;
-    }
-
-    // Optional: handle rejected or unexpected states
-    if (res.status === "REJECTED") {
-      setStage("FORM"); // or show error message
     }
   };
 
 
-
-  const handleAadhaarVerified = async () => {
+    const handleAadhaarVerified = async () => {
     if (!loanData) return;
 
     const res = await applyLoan(loanData);
-    if (!res || !res.status) return;
+    if (!res) return;
 
-    const status = res.status.toUpperCase(); 
+    setResponse(res); // ✅ IMPORTANT
 
-    setResponse(res);
-
-    if (status === "APPROVED") {
+    if (res.status === "APPROVED") {
       setPdfBlob(res.pdfBlob);
       setStage("SANCTION");
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center p-6">
@@ -87,7 +78,7 @@ export default function Dashboard() {
 
         {/* Footer */}
         <div className="text-center text-xs text-slate-400">
-          © {new Date().getFullYear()} META_MINDS • All rights reserved
+          © {new Date().getFullYear()} PROMPT_PIRATES • All rights reserved
         </div>
       </div>
     </div>
