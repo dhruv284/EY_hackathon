@@ -51,7 +51,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-slate-800">
-            Prompt_Pirates Loan Platform
+            PROMPt_PIRATES Loan Platform
           </h1>
           <p className="text-slate-500 text-sm">
             Fast • Secure • Paperless Loan Approval

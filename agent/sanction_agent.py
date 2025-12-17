@@ -32,7 +32,7 @@ def generate_sanction(req: SanctionRequest):
     # Header
     c.setFont("Helvetica-Bold", 20)
     c.setFillGray(0)
-    c.drawString(50, height - 80, "META_MINDS FINANCIAL SERVICES")
+    c.drawString(50, height - 80, "PROMPT_PIRATES FINANCIAL SERVICES")
 
     c.setFont("Helvetica", 12)
     c.drawString(50, height - 110, "AI-Driven Loan Origination Platform")
