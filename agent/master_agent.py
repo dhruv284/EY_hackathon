@@ -1,14 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import httpx
 import os
+import io
+
 app = FastAPI(title="Master Agent")
 
+# Environment variables
 VERIFICATION_URL = os.getenv("VERIFICATION_URL")
 SALES_URL = os.getenv("SALES_URL")
 UNDERWRITING_URL = os.getenv("UNDERWRITING_URL")
 SANCTION_URL = os.getenv("SANCTION_URL")
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,6 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Request schema
 class LoanRequest(BaseModel):
     customer_id: str
     pan: str
@@ -27,7 +34,7 @@ class LoanRequest(BaseModel):
 
 @app.post("/apply-loan")
 async def apply_loan(req: LoanRequest):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30) as client:
 
         # 1️⃣ VERIFICATION
         verification_resp = await client.post(
@@ -39,29 +46,33 @@ async def apply_loan(req: LoanRequest):
                 "phone": req.phone
             }
         )
+
+        if verification_resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Verification service failed")
+
         verification = verification_resp.json()
 
-        # ❌ REJECT
+        # ❌ REJECTED
         if verification["decision"] == "REJECTED":
             return {
                 "status": "REJECTED",
-                "reason": verification["reason"],
-                "credit_score": verification["credit_score"]
+                "reason": verification.get("reason"),
+                "credit_score": verification.get("credit_score")
             }
 
-        # ⚠️ NEED AADHAAR
+        # ⚠️ NEED MORE DETAILS
         if verification["decision"] == "MORE_DETAILS_REQUIRED":
             return {
                 "status": "PENDING",
-                "required_fields": verification["required_fields"],
+                "required_fields": verification.get("required_fields"),
                 "next_step": {
-                    "endpoint": "http://localhost:9004/verify/aadhaar",
+                    "endpoint": "/verify/aadhaar",
                     "method": "POST",
                     "description": "Upload Aadhaar to continue"
                 }
             }
 
-        # ✅ APPROVED
+        # ✅ VERIFIED
         credit_score = verification["credit_score"]
 
         # 2️⃣ SALES
@@ -72,6 +83,10 @@ async def apply_loan(req: LoanRequest):
                 "credit_score": credit_score
             }
         )
+
+        if sales_resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Sales service failed")
+
         offer = sales_resp.json()
 
         # 3️⃣ UNDERWRITING
@@ -83,15 +98,19 @@ async def apply_loan(req: LoanRequest):
                 "loan_amount": req.requested_amount
             }
         )
+
+        if underwriting_resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Underwriting service failed")
+
         uw = underwriting_resp.json()
 
         if not uw["approved"]:
             return {
                 "status": "REJECTED",
-                "reason": uw["reason"]
+                "reason": uw.get("reason")
             }
 
-        # 4️⃣ SANCTION
+        # 4️⃣ SANCTION (PDF STREAM)
         sanction_resp = await client.post(
             f"{SANCTION_URL}/sanction",
             json={
@@ -101,10 +120,19 @@ async def apply_loan(req: LoanRequest):
             }
         )
 
-        return {
-            "status": "APPROVED",
-            "sanction": sanction_resp.json()
-        }
+        if sanction_resp.status_code != 200:
+            raise HTTPException(status_code=502, detail="Sanction service failed")
+
+        # ✅ IMPORTANT: DO NOT CALL .json()
+        pdf_bytes = sanction_resp.content
+
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=sanction_{req.customer_id}.pdf"
+            }
+        )
 
 
 @app.get("/")
