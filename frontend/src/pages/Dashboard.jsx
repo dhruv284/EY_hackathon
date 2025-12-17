@@ -12,20 +12,28 @@ export default function Dashboard() {
   const [response, setResponse] = useState(null);
 
   const handleLoanResult = (res, data) => {
-    if (!res || !res.status) return;
+    if (!res) return;
 
     setLoanData(data);
     setResponse(res);
 
     if (res.status === "PENDING") {
       setStage("AADHAAR");
+      return;
     }
 
     if (res.status === "APPROVED") {
-      setPdfBlob(res.pdfBlob);   // ✅ store PDF
+      setPdfBlob(res.pdfBlob); // PDF exists only here
       setStage("SANCTION");
+      return;
+    }
+
+    // Optional: handle rejected or unexpected states
+    if (res.status === "REJECTED") {
+      setStage("FORM"); // or show error message
     }
   };
+
 
 
   const handleAadhaarVerified = async () => {
