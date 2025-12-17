@@ -61,7 +61,7 @@ def generate_sanction(req: SanctionRequest):
     c.drawString(50, y, "Digitally Signed & Authorized By")
     y -= 20
     c.setFont("Helvetica", 12)
-    c.drawString(50, y, "META_MINDS Credit Decision Engine")
+    c.drawString(50, y, "PROMPT_PIRATES Credit Decision Engine")
 
     c.setFont("Helvetica-Oblique", 9)
     c.drawString(50, 50, "System generated document. No signature required.")
