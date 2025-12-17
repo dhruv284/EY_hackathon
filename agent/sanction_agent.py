@@ -26,7 +26,7 @@ def generate_sanction(req: SanctionRequest):
     c.setFillGray(0.9)
     c.translate(300, 250)
     c.rotate(45)
-    c.drawCentredString(0, 0, "META_MINDS")
+    c.drawCentredString(0, 0, "PROMPT_PIRATES")
     c.restoreState()
 
     # Header
