@@ -10,47 +10,73 @@ export default function Dashboard() {
   const [loanData, setLoanData] = useState(null);
   const [response, setResponse] = useState(null);
 
-  // called after FORM submit
   const handleLoanResult = (res, data) => {
+    if (!res || !res.status) return; 
+    const status = res.status.toUpperCase(); 
+
     setLoanData(data);
     setResponse(res);
 
-    if (res.status === "PENDING") {
+    if (status === "PENDING") {
       setStage("AADHAAR");
-    }
-
-    if (res.status === "APPROVED") {
+    } else if (status === "APPROVED") {
       setStage("SANCTION");
     }
   };
 
-  // called after Aadhaar verified
   const handleAadhaarVerified = async () => {
+    if (!loanData) return;
+
     const res = await applyLoan(loanData);
+    if (!res || !res.status) return;
+
+    const status = res.status.toUpperCase(); 
+
     setResponse(res);
 
-    if (res.status === "APPROVED") {
+    if (status === "APPROVED") {
       setStage("SANCTION");
     }
   };
 
   return (
-    <div style={{ padding: 30 }}>
-      <h1>META_MINDS Loan Platform</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center p-6">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8 space-y-8">
 
-      <Timeline stage={stage} />
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold text-slate-800">
+            META_MINDS Loan Platform
+          </h1>
+          <p className="text-slate-500 text-sm">
+            Fast • Secure • Paperless Loan Approval
+          </p>
+        </div>
 
-      {stage === "FORM" && (
-        <LoanForm onResult={handleLoanResult} />
-      )}
+        {/* Timeline */}
+        <Timeline stage={stage} />
 
-      {stage === "AADHAAR" && (
-        <AadhaarUpload onVerified={handleAadhaarVerified} />
-      )}
+        {/* Content */}
+        <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+          {stage === "FORM" && (
+            <LoanForm onResult={handleLoanResult} />
+          )}
 
-      {stage === "SANCTION" && response && (
-        <SanctionView data={response} />
-      )}
+          {stage === "AADHAAR" && (
+            <AadhaarUpload onVerified={handleAadhaarVerified} />
+          )}
+
+          {stage === "SANCTION" && response && (
+            <SanctionView data={response} />
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-xs text-slate-400">
+          © {new Date().getFullYear()} META_MINDS • All rights reserved
+        </div>
+      </div>
     </div>
   );
 }
+
