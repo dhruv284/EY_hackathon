@@ -29,24 +29,10 @@ export default function Dashboard() {
 
 
   const handleAadhaarVerified = async (customerIdFromAadhaar) => {
-    if (!loanData) return;
+    const handleAadhaarVerified = () => {
+  setStage("SANCTION"); // ✅ prototype flow
+  };
 
-    const updatedLoanData = {
-      ...loanData,
-      customer_id: customerIdFromAadhaar
-    };
-
-    setLoanData(updatedLoanData);
-
-    const res = await applyLoan(updatedLoanData);
-    if (!res) return;
-
-    setResponse(res);
-
-    if (res.status === "APPROVED") {
-      setPdfBlob(res.pdfBlob);
-      setStage("SANCTION");
-    }
   };
 
 
