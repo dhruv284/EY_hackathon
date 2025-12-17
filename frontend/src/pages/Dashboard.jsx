@@ -28,12 +28,10 @@ export default function Dashboard() {
   };
 
 
-  const handleAadhaarVerified = async (customerIdFromAadhaar) => {
-    const handleAadhaarVerified = () => {
-  setStage("SANCTION"); // ✅ prototype flow
+  const handleAadhaarVerified = () => {
+    setStage("SANCTION"); // ✅ prototype flow
   };
 
-  };
 
 
 
